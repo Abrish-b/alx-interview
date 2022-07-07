@@ -1,48 +1,42 @@
 #!/usr/bin/python3
-'''
-Reads stdin line by line and computes metrics
-'''
+"""
+This module contains the function that displays the
+stats from the standard input
+"""
+import re
+import sys
+status_codes = {200: 0, 301: 0, 400: 0, 401: 0,
+                403: 0, 404: 0, 405: 0, 500: 0}
+print_counter = 0
+size_summation = 0
 
 
-from sys import stdin
-
-status_code = {
-    "200": 0,
-    "301": 0,
-    "400": 0,
-    "401": 0,
-    "403": 0,
-    "404": 0,
-    "405": 0,
-    "500": 0
-}
-
-total_size = 0
-
-
-def log_parsing():
-    print("File size: {}".format(total_size))
-    for status in sorted(status_code.keys()):
-        if status_code[status]:
-            print("{}: {}".format(status, status_code[status]))
+def print_logs():
+    """
+    Prints status codes to the logs
+    """
+    print("File size: {}".format(size_summation))
+    for k, v in sorted(status_codes.items()):
+        if v != 0:
+            print("{}: {}".format(k, v))
 
 
 if __name__ == "__main__":
-    counter = 0
     try:
-        for line in stdin:
+        for line in sys.stdin:
+            std_line = line.replace("\n", "")
+            log_list = re.split('- | "|" | " " ', str(std_line))
             try:
-                line_item = line.split()
-                total_size += int(line_item[-1])
-                if line_item[-2] in status_code:
-                    status_code[line_item[-2]] += 1
+                codes = log_list[-1].split(" ")
+                if int(codes[0]) not in status_codes.keys():
+                    continue
+                status_codes[int(codes[0])] += 1
+                print_counter += 1
+                size_summation += int(codes[1])
+                if print_counter % 10 == 0:
+                    print_logs()
             except:
                 pass
-            if counter == 9:
-                log_parsing()
-                counter = -1
-            counter += 1
+        print_logs()
     except KeyboardInterrupt:
-        log_parsing()
-        raise
-    log_parsing()
+        print_logs()
