@@ -1,10 +1,12 @@
 #!/usr/bin/python3
-"""
-Module that parses a log and prints stats to stdout
-"""
+'''
+Reads stdin line by line and computes metrics
+'''
+
+
 from sys import stdin
 
-status_codes = {
+status_code = {
     "200": 0,
     "301": 0,
     "400": 0,
@@ -15,33 +17,32 @@ status_codes = {
     "500": 0
 }
 
-size = 0
+total_size = 0
 
 
-def print_stats():
-    """Prints the accumulated logs"""
-    print("File size: {}".format(size))
-    for status in sorted(status_codes.keys()):
-        if status_codes[status]:
-            print("{}: {}".format(status, status_codes[status]))
+def log_parsing():
+    print("File size: {}".format(total_size))
+    for status in sorted(status_code.keys()):
+        if status_code[status]:
+            print("{}: {}".format(status, status_code[status]))
 
 
 if __name__ == "__main__":
-    count = 0
+    counter = 0
     try:
         for line in stdin:
             try:
-                items = line.split()
-                size += int(items[-1])
-                if items[-2] in status_codes:
-                    status_codes[items[-2]] += 1
+                line_item = line.split()
+                total_size += int(line_item[-1])
+                if line_item[-2] in status_code:
+                    status_code[line_item[-2]] += 1
             except:
                 pass
-            if count == 9:
-                print_stats()
-                count = -1
-            count += 1
+            if counter == 9:
+                log_parsing()
+                counter = -1
+            counter += 1
     except KeyboardInterrupt:
-        print_stats()
+        log_parsing()
         raise
-    print_stats()
+    log_parsing()
