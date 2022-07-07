@@ -1,42 +1,47 @@
 #!/usr/bin/python3
-"""
-This module contains the function that displays the
-stats from the standard input
-"""
-import re
-import sys
-status_codes = {200: 0, 301: 0, 400: 0, 401: 0,
-                403: 0, 404: 0, 405: 0, 500: 0}
-print_counter = 0
-size_summation = 0
+""" script that reads stdin line by line and computes metrics """
 
+if __name__ == '__main__':
 
-def print_logs():
-    """
-    Prints status codes to the logs
-    """
-    print("File size: {}".format(size_summation))
-    for k, v in sorted(status_codes.items()):
-        if v != 0:
-            print("{}: {}".format(k, v))
+    import sys
 
+    def print_results(statusCodes, fileSize):
+        """ Print statistics """
+        print("File size: {:d}".format(fileSize))
+        for statusCode, times in sorted(statusCodes.items()):
+            if times:
+                print("{:s}: {:d}".format(statusCode, times))
 
-if __name__ == "__main__":
+    statusCodes = {"200": 0,
+                   "301": 0,
+                   "400": 0,
+                   "401": 0,
+                   "403": 0,
+                   "404": 0,
+                   "405": 0,
+                   "500": 0
+                   }
+    fileSize = 0
+    n_lines = 0
+
     try:
+        """ Read stdin line by line """
         for line in sys.stdin:
-            std_line = line.replace("\n", "")
-            log_list = re.split('- | "|" | " " ', str(std_line))
+            if n_lines != 0 and n_lines % 10 == 0:
+                """ After every 10 lines, print from the beginning """
+                print_results(statusCodes, fileSize)
+            n_lines += 1
+            data = line.split()
             try:
-                codes = log_list[-1].split(" ")
-                if int(codes[0]) not in status_codes.keys():
-                    continue
-                status_codes[int(codes[0])] += 1
-                print_counter += 1
-                size_summation += int(codes[1])
-                if print_counter % 10 == 0:
-                    print_logs()
+                """ Compute metrics """
+                statusCode = data[-2]
+                if statusCode in statusCodes:
+                    statusCodes[statusCode] += 1
+                fileSize += int(data[-1])
             except:
                 pass
-        print_logs()
+        print_results(statusCodes, fileSize)
     except KeyboardInterrupt:
-        print_logs()
+        """ Keyboard interruption, print from the beginning """
+        print_results(statusCodes, fileSize)
+        raise
